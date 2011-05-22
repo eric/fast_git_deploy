@@ -1,15 +1,10 @@
-def self.join(*args)
-  current_path = File.dirname(__FILE__)
-  File.expand_path(File.join(current_path, *args))
-end
-
 set :application, "fast_git_deploy_test"
-set :repository,  join("..", "..", ".git")
-set :deploy_to,   join("..", "deployments")
+set :repository,  File.expand_path('../../../.git', __FILE__)
+set :deploy_to,   File.expand_path('../../deployments', __FILE__)
 set :scm_command, `which git`.chomp
-set :user,        `whoami`.chomp
-
-set :scm, :git
+set :scm,         :git
+set :user,        ENV['USER']
+set(:password)    { Capistrano::CLI.password_prompt("SSH password for #{user}@localhost: ") }
 
 ssh_options[:paranoid] = false
 default_run_options[:pty] = true

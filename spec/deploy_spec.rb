@@ -3,7 +3,7 @@ require "spec_helper"
 describe "fast git deploy" do
   def cap_execute(command)
     commands = [
-      "--file", File.expand_path("#{File.dirname(__FILE__)}/Capfile"),
+      "--file", File.expand_path("../Capfile", __FILE__),
       "--quiet"
     ]
     commands.push command.split(" ")
