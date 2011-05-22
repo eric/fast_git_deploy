@@ -1,3 +1,5 @@
+require 'fast_git_deploy'
+
 set :application, "fast_git_deploy_test"
 set :repository,  File.expand_path('../../../.git', __FILE__)
 set :deploy_to,   File.expand_path('../../deployments', __FILE__)

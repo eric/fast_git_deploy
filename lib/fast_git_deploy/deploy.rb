@@ -61,7 +61,7 @@ module FastGitDeploy
               "#{scm_command} reset --hard origin/#{branch}"
             ]
 
-            if variable(:git_enable_submodules)
+            if fetch(:git_enable_submodules, false)
               commands << "#{scm_command} submodule update --init"
             end
 
@@ -147,3 +147,7 @@ module FastGitDeploy
             run "#{try_sudo} mkdir -p #{dirs.join(' ')} && #{try_sudo} chmod g+w #{dirs.join(' ')}"
           end
         end
+      end
+    end
+  end
+end
