@@ -13,13 +13,20 @@ module FastGitDeploy
           end
 
           def self.clone_repository_command(path)
-            [
+            commands = [
               "if [ ! -e #{path} ]",
                 "then mkdir -p #{deploy_to}",
                 "cd #{deploy_to}",
-                "#{scm_command} clone #{repository} #{path}",
-              "fi"
-            ].join("; ")
+                "#{scm_command} clone #{repository} #{path}"
+            ]
+
+            if fetch(:git_enable_submodules, false)
+              commands << "#{scm_command} submodule update --init"
+            end
+
+            commands << "fi"
+
+            commands.join("; ")
           end
 
           desc "Clones the repos"

@@ -37,10 +37,16 @@ module FastGitDeploy
               end
 
               if previous_revision
-                run [
+                commands = [
                   "cd #{current_path}",
                   "#{scm_command} reset --hard #{previous_revision}"
-                ].join(" && ")
+                ]
+
+                if fetch(:git_enable_submodules, false)
+                  commands << "#{scm_command} submodule update --init"
+                end
+
+                run commands.join(" && ")
               else
                 raise(Capistrano::Error, "Couldn't find a revision previous to #{current_revision}")
               end
