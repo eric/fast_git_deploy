@@ -1,10 +1,13 @@
-require 'fast_git_deploy/enable'
 
 set :application, "fast_git_deploy_test"
 set :repository,  File.expand_path('../../../.git', __FILE__)
 set :deploy_to,   File.expand_path('../../deployments', __FILE__)
 set :scm,         :git
-set :deploy_via,  :fast_git_deploy
+
+unless fetch(:disable_fast_git_deploy, false)
+  require 'fast_git_deploy/enable'
+end
+
 set :use_sudo,    false
 set :user,        ENV['USER']
 set(:password)    { Capistrano::CLI.password_prompt("SSH password for #{user}@localhost: ") }

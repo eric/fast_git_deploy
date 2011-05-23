@@ -36,4 +36,10 @@ describe "fast git deploy" do
     cap_execute "deploy:cold"
     cap_execute "deploy:migrations"
   end
+
+  it "should be able to upgrade via deploy:warm" do
+    cap_execute "deploy:setup -S disable_fast_git_deploy=true"
+    cap_execute "deploy:cold -S disable_fast_git_deploy=true"
+    cap_execute "deploy:warm"
+  end
 end
