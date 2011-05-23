@@ -1,5 +1,4 @@
 require 'fast_git_deploy/deploy'
-require 'fast_git_deploy/rollback'
 require 'fast_git_deploy/setup'
 require 'fast_git_deploy/strategy'
 
