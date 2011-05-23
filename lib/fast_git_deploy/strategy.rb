@@ -3,7 +3,7 @@ require 'capistrano/recipes/deploy/strategy/remote'
 module FastGitDeploy
   class Strategy < Capistrano::Deploy::Strategy::Remote
     def checkout!(path = configuration[:current_path])
-      scm_run "#{source.checkout(revision, path)} && #{mark}"
+      scm_run "#{source.checkout(revision, path)} && #{mark(revision, path)}"
     end
 
     def rollback!
@@ -18,8 +18,8 @@ module FastGitDeploy
       @command ||= source.sync(revision, configuration[:current_path])
     end
 
-    def mark(rev = revision)
-      "(echo #{rev} > #{configuration[:release_path]}/REVISION) && #{revision_log_mark(rev)}"
+    def mark(rev = revision, path = configuration[:current_path])
+      "(echo #{rev} > #{path}/REVISION) && #{revision_log_mark(rev)}"
     end
 
     def revision_log_mark(rev = revision)

@@ -10,7 +10,7 @@ module FastGitDeploy
         set :migrate_target, :current
         set :releases,       ['current']
         set(:release_path)   { File.join(releases_path, "current") }
-        set(:releases_path)  { File.join(deploy_to) }
+        set(:releases_path)  { deploy_to }
 
         set(:revisions) {
           # we have found the currently deployed revision

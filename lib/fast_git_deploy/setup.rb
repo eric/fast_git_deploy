@@ -16,7 +16,8 @@ module FastGitDeploy
             remove_old_app
             rename_clone
 
-            deploy.default
+            deploy.update
+            deploy.restart
             deploy.web.enable
           end
 
