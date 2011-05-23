@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   ## the sub! line in the Rakefile
   s.name              = 'fast_git_deploy'
   s.version           = '0.1.0'
-  s.date              = '2011-05-21'
+  s.date              = '2011-05-23'
 
   ## Make sure your summary is short. The description may be as long
   ## as you like.
@@ -56,8 +56,10 @@ Gem::Specification.new do |s|
     fast_git_deploy.gemspec
     lib/fast_git_deploy.rb
     lib/fast_git_deploy/deploy.rb
-    lib/fast_git_deploy/rollback.rb
+    lib/fast_git_deploy/enable.rb
     lib/fast_git_deploy/setup.rb
+    lib/fast_git_deploy/strategy.rb
+    recipes/init.rb
     spec/Capfile
     spec/config/deploy.rb
     spec/deploy_spec.rb
