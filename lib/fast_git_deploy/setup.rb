@@ -4,43 +4,9 @@ module FastGitDeploy
       configuration.load do
         namespace :fast_git_setup do
           task :cold do
-            clone_repository
-            finalize_clone
-            create_revision_log
-
+            strategy.checkout!
             deploy.update
             deploy.restart
-          end
-
-          def self.clone_repository_command(path)
-            commands = [
-              "if [ ! -e #{path} ]",
-                "then mkdir -p #{deploy_to}",
-                "cd #{deploy_to}",
-                "#{scm_command} clone #{repository} #{path}"
-            ]
-
-            if fetch(:git_enable_submodules, false)
-              commands << "#{scm_command} submodule update --init"
-            end
-
-            commands << "fi"
-
-            commands.join("; ")
-          end
-
-          desc "Clones the repos"
-          task :clone_repository, :except => { :no_release => true } do
-            run clone_repository_command(current_path)
-          end
-
-          task :create_revision_log, :except => { :no_release => true } do
-            run [
-              "if [ ! -e #{revision_log} ]",
-                "then touch #{revision_log}",
-                "chmod 664 #{revision_log}",
-              "fi"
-            ].join("; ")
           end
 
           task :warm do
@@ -49,13 +15,13 @@ module FastGitDeploy
             deploy.web.disable
             remove_old_app
             rename_clone
-            finalize_clone
+
             deploy.default
             deploy.web.enable
           end
 
           task :clone_repository_to_tmp_path, :except => { :no_release => true } do
-            run clone_repository_command("#{current_path}.clone")
+            strategy.checkout!("#{current_path}.clone")
           end
 
           task :rename_clone, :except => { :no_release => true } do
@@ -82,19 +48,6 @@ module FastGitDeploy
                 "then mv #{current_path} #{current_path}.old",
               "fi"
             ].join("; ")
-          end
-
-
-          desc <<-HERE
-            This task will make the release group-writable (if the :group_writable
-            variable is set to true, which is the default). It will then set up
-            symlinks to the shared directory for the log, system, and tmp/pids
-            directories.
-          HERE
-          task :finalize_clone, :except => { :no_release => true } do
-            run "chmod -R g+w #{current_path}" if fetch(:group_writable, true)
-
-            deploy.symlink_system_files
           end
         end
       end

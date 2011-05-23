@@ -2,14 +2,41 @@ module FastGitDeploy
   module Deploy
     def self.load_into(configuration)
       configuration.load do
-        set :scm,            "git"
-        set :scm_command,    "git"
+        set :scm,            'git'
+        set :deploy_via,     :fast_git_deploy
+        set(:strategy)       { FastGitDeploy::Strategy.new(self) }
         set(:revision_log)   { "#{deploy_to}/revisions.log" }
         set(:version_file)   { "#{current_path}/REVISION" }
         set :migrate_target, :current
         set :releases,       ['current']
         set(:release_path)   { File.join(releases_path, "current") }
         set(:releases_path)  { File.join(deploy_to) }
+
+        set(:revisions) {
+          # we have found the currently deployed revision
+          # so scan the file backwards until a different revision
+          # is found (removing duplicates - i.e.):
+          #
+          # 2010-04-21 15:22:59 deploy 2a285b0f600c7ed31b307390ad91c
+          # 2010-04-22 09:58:28 deploy 53cff5db28116ecd5ad32d11ee6e1
+          # 2010-04-22 10:02:41 deploy 53cff5db28116ecd5ad32d11ee6e1
+          # 2010-04-26 08:18:39 deploy 5494dc2a00beb5350eff6be151987
+          # 2010-04-27 09:10:06 deploy 5494dc2a00beb5350eff6be151987
+          # 2010-04-27 11:49:29 deploy 5494dc2a00beb5350eff6be151987
+          #
+          # Rolling back from 5494dc should yield 53cff5db
+
+          revisions = []
+          revision_log_data = capture("cat #{revision_log}", :except => { :no_release => true }).split(/\r?\n/)
+          revision_log_data.map do |entry|
+            rev = entry.split(" ").last
+            revisions << rev if revisions.last != rev
+          end
+          revisions
+        }
+
+        set(:latest_revision)   { current_revision }
+        set(:previous_revision) { revisions[-2] }
 
         namespace :deploy do
           desc <<-DESC
@@ -55,18 +82,8 @@ module FastGitDeploy
 
           desc "Updates code in the repos by fetching and resetting to the latest in the branch"
           task :update_code, :except => { :no_release => true } do
-            commands = [
-              "cd #{current_path}",
-              "#{scm_command} fetch",
-              "#{scm_command} reset --hard origin/#{branch}"
-            ]
-
-            if fetch(:git_enable_submodules, false)
-              commands << "#{scm_command} submodule update --init"
-            end
-
-            run commands.join(" && ")
-
+            # Make sure our version of this task does not remove the directory for rollback
+            strategy.deploy!
             finalize_update
           end
 
@@ -93,7 +110,6 @@ module FastGitDeploy
           desc "Symlink system files & set revision info"
           task :symlink, :except => { :no_release => true } do
             symlink_system_files
-            set_revisions
           end
 
           desc "Symlink system files"
@@ -106,23 +122,6 @@ module FastGitDeploy
               "ln -s #{shared_path}/system #{current_path}/public/system",
               "ln -s #{shared_path}/pids   #{current_path}/tmp/pids"
             ].join(" && ")
-          end
-
-          desc "Set the revisions file.  This allows us to go back to previous versions."
-          task :set_revisions, :except => { :no_release => true } do
-            set_version_file
-            update_revisions_log
-          end
-
-          task :set_version_file, :except => { :no_release => true } do
-            run [
-              "cd #{current_path}",
-              "#{scm_command} rev-list HEAD | head -n 1 > #{version_file}"
-            ].join(" && ")
-          end
-
-          task :update_revisions_log, :except => { :no_release => true } do
-            run "echo `date +\"%Y-%m-%d %H:%M:%S\"` $USER $(cat #{version_file}) >> #{deploy_to}/revisions.log"
           end
 
           desc "Do nothing (since we have no releases directory)"
